@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Add Questions</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
+        .box { background: white; padding: 25px; border-radius: 10px; margin-bottom: 20px; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .question { background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745; }
+        .delete { background: #dc3545; float: right; }
+    </style>
+</head>
+<body>
+    <h1>📝 Admin Panel - Add Questions</h1>
+    
+    <div class="box">
+        <h3>Add New Question</h3>
+        <textarea id="question" rows="2" placeholder="Enter your question..."></textarea>
+        <input type="text" id="optA" placeholder="Option A">
+        <input type="text" id="optB" placeholder="Option B">
+        <input type="text" id="optC" placeholder="Option C">
+        <input type="text" id="optD" placeholder="Option D">
+        <select id="correct">
+            <option value="A">Correct Answer: A</option>
+            <option value="B">Correct Answer: B</option>
+            <option value="C">Correct Answer: C</option>
+            <option value="D">Correct Answer: D</option>
+        </select>
+        <button onclick="addQuestion()">➕ Add Question</button>
+    </div>
+
+    <div class="box">
+        <h3>📋 All Questions</h3>
+        <div id="questionsList"></div>
+        <button onclick="deleteAll()" style="background:#dc3545">🗑️ Delete All Questions</button>
+    </div>
+
+    <script>
+        let questions = JSON.parse(localStorage.getItem('examQuestions')) || [];
+
+        function saveQuestions() {
+            localStorage.setItem('examQuestions', JSON.stringify(questions));
+            displayQuestions();
+        }
+
+        function addQuestion() {
+            let q = {
+                text: document.getElementById('question').value,
+                A: document.getElementById('optA').value,
+                B: document.getElementById('optB').value,
+                C: document.getElementById('optC').value,
+                D: document.getElementById('optD').value,
+                correct: document.getElementById('correct').value
+            };
+            
+            if (!q.text || !q.A || !q.B || !q.C || !q.D) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            questions.push(q);
+            saveQuestions();
+            
+            // Clear form
+            document.getElementById('question').value = '';
+            document.getElementById('optA').value = '';
+            document.getElementById('optB').value = '';
+            document.getElementById('optC').value = '';
+            document.getElementById('optD').value = '';
+        }
+
+        function displayQuestions() {
+            let container = document.getElementById('questionsList');
+            if (questions.length === 0) {
+                container.innerHTML = '<p>No questions yet. Add some above.</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            questions.forEach((q, i) => {
+                container.innerHTML += `
+                    <div class="question">
+                        <button class="delete" onclick="deleteQuestion(${i})">Delete</button>
+                        <strong>Q${i+1}:</strong> ${q.text}<br>
+                        A. ${q.A}<br>
+                        B. ${q.B}<br>
+                        C. ${q.C}<br>
+                        D. ${q.D}<br>
+                        <span style="color:green">✓ Correct: ${q.correct}</span>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteQuestion(index) {
+            questions.splice(index, 1);
+            saveQuestions();
+        }
+
+        function deleteAll() {
+            if (confirm('Delete all questions?')) {
+                questions = [];
+                saveQuestions();
+            }
+        }
+
+        displayQuestions();
+    </script>
+</body>
+</html>

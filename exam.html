@@ -1,51 +1,168 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Take the Exam</title>
+    <title>JAMB 2026 Mock Exam - Biology</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
-        .header { background: #1a73e8; color: white; padding: 20px; text-align: center; border-radius: 10px; }
-        .question { background: white; padding: 20px; margin: 15px 0; border-radius: 10px; }
-        .question-text { font-weight: bold; font-size: 18px; margin-bottom: 15px; }
-        .option { padding: 10px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial; background: #f0f2f5; }
+        .header { background: #1a73e8; color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 24px; }
+        .container { max-width: 900px; margin: 20px auto; padding: 0 20px; }
+        .student-info { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        .student-info input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .question-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .question-text { font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #1a1a2e; }
+        .option { padding: 10px; margin: 5px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; transition: 0.2s; }
         .option:hover { background: #e9ecef; }
-        .option input { margin-right: 10px; transform: scale(1.2); }
-        .submit { background: #28a745; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; }
-        .name-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .option input { margin-right: 12px; transform: scale(1.1); cursor: pointer; }
+        .option label { cursor: pointer; font-size: 15px; }
+        .submit-btn { background: #28a745; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin: 20px 0; font-weight: bold; }
+        .result-card { background: white; padding: 25px; border-radius: 10px; margin-top: 20px; }
+        .score { font-size: 48px; font-weight: bold; text-align: center; }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .answer-key { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; max-height: 400px; overflow-y: auto; }
+        .timer { background: #e94560; color: white; padding: 12px; text-align: center; font-size: 20px; font-weight: bold; position: sticky; top: 0; z-index: 100; }
+        @media (max-width: 600px) {
+            .question-card { padding: 15px; }
+            .option label { font-size: 13px; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📝 Online Exam</h1>
-        <p>Select one answer for each question</p>
+        <h1>📝 JAMB 2026 MOCK EXAMINATION</h1>
+        <p>Biology - Top 100 Repeated Questions</p>
     </div>
 
-    <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
-        <input type="text" id="studentName" class="name-input" placeholder="Enter your full name">
-    </div>
+    <div class="container">
+        <div class="student-info">
+            <input type="text" id="studentName" placeholder="Enter your full name">
+        </div>
 
-    <div id="examContainer"></div>
-    
-    <button class="submit" onclick="submitExam()">✅ Submit Answers</button>
-    
-    <div id="result" style="margin-top: 20px;"></div>
+        <div id="examContainer"></div>
+        
+        <button class="submit-btn" onclick="submitExam()">✅ Submit Exam & See Score</button>
+        
+        <div id="result"></div>
+    </div>
 
     <script>
-        let questions = JSON.parse(localStorage.getItem('examQuestions')) || [];
+        // ALL 100 QUESTIONS PRE-LOADED
+        const questions = [
+            { text: "Which of the following is a characteristic of all living things?", A: "Movement from place to place", B: "Ability to respire", C: "Possession of chlorophyll", D: "Ability to fly", correct: "B" },
+            { text: "The basic unit of life according to the cell theory is the", A: "tissue", B: "organ", C: "cell", D: "system", correct: "C" },
+            { text: "The main difference between plant and animal cells is the presence of", A: "nucleus", B: "cell wall and chloroplasts in plants", C: "mitochondria", D: "ribosomes", correct: "B" },
+            { text: "Which level of organisation comes immediately after tissue in living organisms?", A: "cell", B: "organ", C: "system", D: "organism", correct: "B" },
+            { text: "Euglena is regarded as a link between plants and animals because it", A: "has a flagellum only", B: "can carry out photosynthesis and also move freely", C: "has a cell wall", D: "is multicellular", correct: "B" },
+            { text: "The kingdom that includes organisms with rigid cell walls made of chitin is", A: "Plantae", B: "Fungi", C: "Protista", D: "Monera", correct: "B" },
+            { text: "Which of the following is a prokaryote?", A: "Amoeba", B: "Bacteria", C: "Euglena", D: "Paramecium", correct: "B" },
+            { text: "The process by which green plants manufacture their food is called", A: "respiration", B: "photosynthesis", C: "transpiration", D: "digestion", correct: "B" },
+            { text: "In the ecological zones of West Africa, the zone with the highest rainfall is", A: "Sudan savanna", B: "Guinea savanna", C: "Rain forest", D: "Sahel savanna", correct: "C" },
+            { text: "The ultimate source of energy in an ecosystem is", A: "water", B: "sun", C: "green plants", D: "soil", correct: "B" },
+            { text: "Which of the following is a biotic factor in an ecosystem?", A: "Temperature", B: "Light", C: "Predators", D: "Humidity", correct: "C" },
+            { text: "The relationship where both organisms benefit is known as", A: "parasitism", B: "commensalism", C: "mutualism", D: "competition", correct: "C" },
+            { text: "The mode of nutrition in which organisms feed on dead and decaying matter is", A: "autotrophic", B: "holozoic", C: "saprophytic", D: "parasitic", correct: "C" },
+            { text: "The organ responsible for excretion in earthworm is", A: "kidney", B: "nephridium", C: "flame cell", D: "Malpighian tubule", correct: "B" },
+            { text: "Which of the following is a carnivore?", A: "Grasshopper", B: "Lion", C: "Cow", D: "Rabbit", correct: "B" },
+            { text: "The process of breaking down food into simpler forms is", A: "respiration", B: "digestion", C: "photosynthesis", D: "excretion", correct: "B" },
+            { text: "The pigment responsible for photosynthesis in plants is", A: "haemoglobin", B: "chlorophyll", C: "melanin", D: "xanthophyll", correct: "B" },
+            { text: "In humans, the organ that produces bile is the", A: "liver", B: "pancreas", C: "stomach", D: "small intestine", correct: "A" },
+            { text: "The structure that prevents food from entering the windpipe during swallowing is the", A: "epiglottis", B: "glottis", C: "oesophagus", D: "trachea", correct: "A" },
+            { text: "Which of the following is a function of the xylem?", A: "Transport of manufactured food", B: "Transport of water and mineral salts", C: "Storage of food", D: "Photosynthesis", correct: "B" },
+            { text: "The type of reproduction in Amoeba is", A: "binary fission", B: "budding", C: "conjugation", D: "fragmentation", correct: "A" },
+            { text: "The male reproductive organ in flowering plants is the", A: "stigma", B: "style", C: "anther", D: "ovary", correct: "C" },
+            { text: "Variation within the same species is caused by", A: "mutation and sexual reproduction", B: "asexual reproduction only", C: "environmental factors only", D: "mitosis", correct: "A" },
+            { text: "The law of independent assortment was proposed by", A: "Mendel", B: "Darwin", C: "Lamarck", D: "Watson", correct: "A" },
+            { text: "The theory that organisms develop new structures because of need is associated with", A: "Darwin", B: "Lamarck", C: "Mendel", D: "Linnaeus", correct: "B" },
+            { text: "Which of the following is an example of a vestigial organ in humans?", A: "Appendix", B: "Heart", C: "Lungs", D: "Kidney", correct: "A" },
+            { text: "The ecological zone in West Africa characterised by scattered trees and grasses is", A: "rain forest", B: "savanna", C: "desert", D: "mangrove", correct: "B" },
+            { text: "The process by which carbon is returned to the atmosphere is", A: "photosynthesis", B: "respiration", C: "transpiration", D: "nitrification", correct: "B" },
+            { text: "The conservation method that involves the protection of species outside their natural habitat is", A: "in-situ conservation", B: "ex-situ conservation", C: "afforestation", D: "deforestation", correct: "B" },
+            { text: "Which of the following is a pollutant of water?", A: "Oxygen", B: "Sewage", C: "Nitrogen", D: "Carbon dioxide", correct: "B" },
+            { text: "The vector for malaria is", A: "housefly", B: "female Anopheles mosquito", C: "tsetse fly", D: "blackfly", correct: "B" },
+            { text: "The disease caused by the tsetse fly is", A: "malaria", B: "sleeping sickness", C: "cholera", D: "typhoid", correct: "B" },
+            { text: "The part of the brain responsible for balance and coordination is the", A: "cerebrum", B: "cerebellum", C: "medulla oblongata", D: "hypothalamus", correct: "B" },
+            { text: "The hormone responsible for the development of secondary sexual characters in males is", A: "oestrogen", B: "testosterone", C: "insulin", D: "adrenaline", correct: "B" },
+            { text: "Which of the following is a deficiency disease?", A: "Malaria", B: "Kwashiorkor", C: "Cholera", D: "Typhoid", correct: "B" },
+            { text: "The enzyme that digests starch in the mouth is", A: "pepsin", B: "amylase", C: "lipase", D: "trypsin", correct: "B" },
+            { text: "The site of photosynthesis in a leaf is the", A: "stomata", B: "chloroplast", C: "vacuole", D: "nucleus", correct: "B" },
+            { text: "The respiratory organ in insects is the", A: "lung", B: "trachea", C: "gill", D: "skin", correct: "B" },
+            { text: "Which of the following is an example of a homotherm?", A: "Lizard", B: "Bird", C: "Fish", D: "Frog", correct: "B" },
+            { text: "The process of loss of water vapour from leaves is", A: "respiration", B: "transpiration", C: "photosynthesis", D: "guttation", correct: "B" },
+            { text: "The blood group that is a universal donor is", A: "A", B: "B", C: "AB", D: "O", correct: "D" },
+            { text: "The part of the kidney that filters blood is the", A: "glomerulus", B: "ureter", C: "bladder", D: "urethra", correct: "A" },
+            { text: "Which of the following is a sex-linked trait?", A: "Sickle cell anaemia", B: "Colour blindness", C: "Malaria", D: "Diabetes", correct: "B" },
+            { text: "The law of segregation was proposed by", A: "Darwin", B: "Mendel", C: "Lamarck", D: "Watson and Crick", correct: "B" },
+            { text: "The ultimate source of genetic variation is", A: "mutation", B: "mitosis", C: "meiosis", D: "fertilisation", correct: "A" },
+            { text: "The study of interactions between living organisms and their environment is", A: "genetics", B: "ecology", C: "physiology", D: "taxonomy", correct: "B" },
+            { text: "Which of the following is an abiotic factor?", A: "Predators", B: "Temperature", C: "Parasites", D: "Competitors", correct: "B" },
+            { text: "The pyramid of energy in an ecosystem is always", A: "inverted", B: "upright", C: "spindle-shaped", D: "irregular", correct: "B" },
+            { text: "The process of converting atmospheric nitrogen into usable forms by bacteria is", A: "nitrification", B: "nitrogen fixation", C: "denitrification", D: "ammonification", correct: "B" },
+            { text: "The endangered species are best protected by", A: "hunting", B: "in-situ conservation", C: "ex-situ conservation", D: "deforestation", correct: "B" },
+            { text: "The causative agent of AIDS is", A: "virus", B: "bacterium", C: "fungus", D: "protozoan", correct: "A" },
+            { text: "The hormone that regulates blood sugar level is", A: "adrenaline", B: "insulin", C: "thyroxine", D: "oestrogen", correct: "B" },
+            { text: "Which of the following is a vector-borne disease?", A: "Tuberculosis", B: "Malaria", C: "Cholera", D: "Tetanus", correct: "B" },
+            { text: "The part of the ear responsible for balance is the", A: "cochlea", B: "semicircular canals", C: "eustachian tube", D: "pinna", correct: "B" },
+            { text: "The mode of reproduction in Spirogyra is", A: "binary fission", B: "conjugation", C: "budding", D: "fragmentation", correct: "B" },
+            { text: "The organ that stores bile in humans is the", A: "liver", B: "gall bladder", C: "pancreas", D: "stomach", correct: "B" },
+            { text: "Which of the following is a saprophyte?", A: "Mango", B: "Mushroom", C: "Cassava", D: "Maize", correct: "B" },
+            { text: "The process of cell division that produces gametes is", A: "mitosis", B: "meiosis", C: "binary fission", D: "budding", correct: "B" },
+            { text: "The number of chromosomes in a human body cell is", A: "23", B: "46", C: "23 pairs", D: "92", correct: "B" },
+            { text: "A cross between two heterozygous individuals is called", A: "test cross", B: "monohybrid cross", C: "back cross", D: "dihybrid cross", correct: "B" },
+            { text: "The theory of natural selection was proposed by", A: "Lamarck", B: "Darwin", C: "Mendel", D: "Linnaeus", correct: "B" },
+            { text: "Which of the following is an example of adaptive coloration?", A: "Green colour of leaves", B: "Camouflage in chameleon", C: "Red colour of flowers", D: "Yellow colour of banana", correct: "B" },
+            { text: "The ecological zone with the least rainfall in West Africa is the", A: "rain forest", B: "Sahel savanna", C: "Guinea savanna", D: "Sudan savanna", correct: "B" },
+            { text: "The relationship in which one organism benefits and the other is neither helped nor harmed is", A: "parasitism", B: "commensalism", C: "mutualism", D: "predation", correct: "B" },
+            { text: "The instrument used to measure the rate of transpiration is", A: "potometer", B: "hygrometer", C: "anemometer", D: "barometer", correct: "A" },
+            { text: "The hormone responsible for the 'fight or flight' response is", A: "insulin", B: "adrenaline", C: "thyroxine", D: "oestrogen", correct: "B" },
+            { text: "Which of the following is a water-borne disease?", A: "Malaria", B: "Cholera", C: "Sleeping sickness", D: "Yellow fever", correct: "B" },
+            { text: "The site of protein synthesis in the cell is the", A: "nucleus", B: "ribosome", C: "mitochondrion", D: "chloroplast", correct: "B" },
+            { text: "The type of nutrition in which organisms manufacture their own food is", A: "holozoic", B: "autotrophic", C: "saprophytic", D: "parasitic", correct: "B" },
+            { text: "The organelle responsible for packaging and transport of materials in the cell is the", A: "Golgi body", B: "lysosome", C: "endoplasmic reticulum", D: "vacuole", correct: "A" },
+            { text: "In humans, the exchange of gases takes place in the", A: "trachea", B: "bronchioles", C: "alveoli", D: "bronchi", correct: "C" },
+            { text: "The process by which plants lose water through the stomata is", A: "guttation", B: "transpiration", C: "evaporation", D: "respiration", correct: "B" },
+            { text: "Which of the following is a macro-nutrient required by plants?", A: "Iron", B: "Nitrogen", C: "Zinc", D: "Copper", correct: "B" },
+            { text: "The part of the brain that controls voluntary actions is the", A: "cerebrum", B: "cerebellum", C: "medulla", D: "hypothalamus", correct: "A" },
+            { text: "The causative organism of typhoid fever is", A: "virus", B: "bacterium", C: "fungus", D: "protozoan", correct: "B" },
+            { text: "The law of segregation states that", A: "alleles separate during gamete formation", B: "genes are linked", C: "dominant traits always appear", D: "recessive traits never appear", correct: "A" },
+            { text: "The blood vessel that carries oxygenated blood from the lungs to the heart is the", A: "pulmonary artery", B: "pulmonary vein", C: "aorta", D: "vena cava", correct: "B" },
+            { text: "Which of the following is an example of a reflex action?", A: "Writing", B: "Withdrawing hand from hot object", C: "Reading", D: "Speaking", correct: "B" },
+            { text: "The type of skeleton in insects is", A: "endoskeleton", B: "hydrostatic skeleton", C: "exoskeleton", D: "cartilaginous skeleton", correct: "C" },
+            { text: "The hormone that stimulates milk production in mammals is", A: "prolactin", B: "oxytocin", C: "testosterone", D: "adrenaline", correct: "A" },
+            { text: "The process of converting glucose to pyruvate is", A: "Krebs cycle", B: "glycolysis", C: "electron transport chain", D: "fermentation", correct: "B" },
+            { text: "The ecological succession that starts on bare rock is", A: "secondary succession", B: "primary succession", C: "climax community", D: "hydrosere", correct: "B" },
+            { text: "Which of the following is a greenhouse gas?", A: "Oxygen", B: "Carbon dioxide", C: "Nitrogen", D: "Hydrogen", correct: "B" },
+            { text: "The instrument used to measure wind speed is", A: "anemometer", B: "barometer", C: "hygrometer", D: "rain gauge", correct: "A" },
+            { text: "The type of placentation in which ovules are attached to the wall of the ovary is", A: "axile", B: "parietal", C: "free central", D: "basal", correct: "B" },
+            { text: "The enzyme that coagulates milk in the stomach of infants is", A: "pepsin", B: "rennin", C: "trypsin", D: "lipase", correct: "B" },
+            { text: "Which of the following is a flight adaptation in birds?", A: "Hollow bones", B: "Heavy bones", C: "Teeth", D: "Scales", correct: "A" },
+            { text: "The study of fossils is called", A: "ecology", B: "palaeontology", C: "genetics", D: "physiology", correct: "B" },
+            { text: "The part of the flower that receives pollen grains is the", A: "stigma", B: "style", C: "ovary", D: "anther", correct: "A" },
+            { text: "The disease caused by deficiency of vitamin C is", A: "rickets", B: "scurvy", C: "beriberi", D: "pellagra", correct: "B" },
+            { text: "In the food chain Grass → Grasshopper → Lizard → Hawk, the grasshopper is a", A: "producer", B: "primary consumer", C: "secondary consumer", D: "tertiary consumer", correct: "B" },
+            { text: "The process of cell division in somatic cells is", A: "meiosis", B: "mitosis", C: "binary fission", D: "budding", correct: "B" },
+            { text: "Which of the following is an example of a non-renewable resource?", A: "Solar energy", B: "Petroleum", C: "Wind", D: "Water", correct: "B" },
+            { text: "The hormone that controls the metamorphosis in insects is", A: "thyroxine", B: "ecdysone", C: "insulin", D: "adrenaline", correct: "B" },
+            { text: "The respiratory pigment in humans is", A: "chlorophyll", B: "haemoglobin", C: "haemocyanin", D: "myoglobin", correct: "B" },
+            { text: "The type of fruit that develops from a single flower with many ovaries is", A: "simple fruit", B: "aggregate fruit", C: "multiple fruit", D: "false fruit", correct: "B" },
+            { text: "The causative agent of tuberculosis is", A: "virus", B: "bacterium", C: "fungus", D: "protozoan", correct: "B" },
+            { text: "The structure that protects the embryo in a seed is the", A: "testa", B: "plumule", C: "radicle", D: "cotyledon", correct: "A" },
+            { text: "Which word has a different stress pattern from the others?", A: "biology", B: "ecology", C: "physiology", D: "genetics", correct: "D" },
+            { text: "The writing is on the wall in an ecological context often means", A: "danger of environmental degradation is imminent", B: "good news is coming", C: "nothing is written", D: "happy ending", correct: "A" }
+        ];
+
         let userAnswers = {};
 
         function loadExam() {
-            let container = document.getElementById('examContainer');
-            
-            if (questions.length === 0) {
-                container.innerHTML = '<div style="background: #fff3cd; padding: 30px; text-align: center;">No exam available. Please contact the administrator.</div>';
-                return;
-            }
-
+            const container = document.getElementById('examContainer');
             let html = '';
+            
             questions.forEach((q, idx) => {
                 html += `
-                    <div class="question">
+                    <div class="question-card">
                         <div class="question-text">${idx+1}. ${q.text}</div>
                         <div class="option" onclick="selectAnswer(${idx}, 'A')">
                             <input type="radio" name="q${idx}" id="q${idx}_A">
@@ -70,15 +187,15 @@
         }
 
         function selectAnswer(questionIndex, answer) {
-            let radio = document.getElementById(`q${questionIndex}_${answer}`);
+            const radio = document.getElementById(`q${questionIndex}_${answer}`);
             radio.checked = true;
             userAnswers[questionIndex] = answer;
         }
 
         function submitExam() {
-            let studentName = document.getElementById('studentName').value.trim();
+            const studentName = document.getElementById('studentName').value.trim();
             if (!studentName) {
-                alert('Please enter your name');
+                alert('Please enter your name before submitting');
                 return;
             }
 
@@ -86,54 +203,62 @@
             let details = [];
 
             for (let i = 0; i < questions.length; i++) {
-                let userAnswer = userAnswers[i];
-                let correctAnswer = questions[i].correct;
-                let isCorrect = (userAnswer === correctAnswer);
+                const userAnswer = userAnswers[i];
+                const correctAnswer = questions[i].correct;
+                const isCorrect = (userAnswer === correctAnswer);
                 
                 if (isCorrect) score++;
                 
                 details.push({
                     num: i+1,
-                    question: questions[i].text,
                     userAnswer: userAnswer || 'Not answered',
                     correctAnswer: correctAnswer,
                     isCorrect: isCorrect
                 });
             }
 
-            let percentage = Math.round((score / questions.length) * 100);
+            const percentage = Math.round((score / questions.length) * 100);
+            const passed = percentage >= 70;
             
-            // Save result to localStorage
-            let allResults = JSON.parse(localStorage.getItem('examResults')) || [];
+            // Save result
+            let allResults = JSON.parse(localStorage.getItem('jambExamResults')) || [];
             allResults.push({
                 name: studentName,
                 date: new Date().toLocaleString(),
                 score: score,
                 total: questions.length,
                 percentage: percentage,
-                answers: userAnswers
+                passed: passed
             });
-            localStorage.setItem('examResults', JSON.stringify(allResults));
+            localStorage.setItem('jambExamResults', JSON.stringify(allResults));
 
-            // Show result to student
+            // Show results
             let resultHtml = `
-                <div style="background: white; padding: 25px; border-radius: 10px; text-align: center;">
-                    <h2>Your Result</h2>
-                    <div style="font-size: 48px; font-weight: bold;">${score} / ${questions.length}</div>
-                    <div style="font-size: 24px;">${percentage}%</div>
-                    <div style="margin: 20px 0; text-align: left;">
-                        <h3>Answer Key:</h3>
+                <div class="result-card">
+                    <div class="score ${passed ? 'pass' : 'fail'}">${score} / ${questions.length}</div>
+                    <div style="font-size: 28px; text-align: center;">${percentage}%</div>
+                    <div style="font-size: 20px; text-align: center; margin: 10px 0;">
+                        ${passed ? '✅ PASSED - Well done!' : '❌ FAILED - Keep practicing!'}
+                    </div>
+                    
+                    <div class="answer-key">
+                        <h3>📋 Answer Summary:</h3>
                         ${details.map(d => `
-                            <p>${d.num}. ${d.isCorrect ? '✅' : '❌'} Your answer: ${d.userAnswer} | Correct: ${d.correctAnswer}</p>
+                            <p>Q${d.num}: ${d.isCorrect ? '✅' : '❌'} Your answer: ${d.userAnswer} | Correct: ${d.correctAnswer}</p>
                         `).join('')}
                     </div>
-                    <button onclick="location.reload()">Take Another Exam</button>
+                    
+                    <button onclick="location.reload()" style="background: #1a73e8; color: white; padding: 12px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px;">Take Exam Again</button>
                 </div>
             `;
             
             document.getElementById('result').innerHTML = resultHtml;
             document.getElementById('examContainer').style.display = 'none';
-            document.querySelector('.submit').style.display = 'none';
+            document.querySelector('.submit-btn').style.display = 'none';
+            document.querySelector('.student-info').style.display = 'none';
+            
+            // Scroll to results
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
         }
 
         loadExam();

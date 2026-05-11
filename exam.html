@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Take the Exam</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
+        .header { background: #1a73e8; color: white; padding: 20px; text-align: center; border-radius: 10px; }
+        .question { background: white; padding: 20px; margin: 15px 0; border-radius: 10px; }
+        .question-text { font-weight: bold; font-size: 18px; margin-bottom: 15px; }
+        .option { padding: 10px; margin: 8px 0; background: #f8f9fa; border-radius: 8px; cursor: pointer; }
+        .option:hover { background: #e9ecef; }
+        .option input { margin-right: 10px; transform: scale(1.2); }
+        .submit { background: #28a745; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; }
+        .name-input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📝 Online Exam</h1>
+        <p>Select one answer for each question</p>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 10px; margin-top: 20px;">
+        <input type="text" id="studentName" class="name-input" placeholder="Enter your full name">
+    </div>
+
+    <div id="examContainer"></div>
+    
+    <button class="submit" onclick="submitExam()">✅ Submit Answers</button>
+    
+    <div id="result" style="margin-top: 20px;"></div>
+
+    <script>
+        let questions = JSON.parse(localStorage.getItem('examQuestions')) || [];
+        let userAnswers = {};
+
+        function loadExam() {
+            let container = document.getElementById('examContainer');
+            
+            if (questions.length === 0) {
+                container.innerHTML = '<div style="background: #fff3cd; padding: 30px; text-align: center;">No exam available. Please contact the administrator.</div>';
+                return;
+            }
+
+            let html = '';
+            questions.forEach((q, idx) => {
+                html += `
+                    <div class="question">
+                        <div class="question-text">${idx+1}. ${q.text}</div>
+                        <div class="option" onclick="selectAnswer(${idx}, 'A')">
+                            <input type="radio" name="q${idx}" id="q${idx}_A">
+                            <label for="q${idx}_A">A. ${q.A}</label>
+                        </div>
+                        <div class="option" onclick="selectAnswer(${idx}, 'B')">
+                            <input type="radio" name="q${idx}" id="q${idx}_B">
+                            <label for="q${idx}_B">B. ${q.B}</label>
+                        </div>
+                        <div class="option" onclick="selectAnswer(${idx}, 'C')">
+                            <input type="radio" name="q${idx}" id="q${idx}_C">
+                            <label for="q${idx}_C">C. ${q.C}</label>
+                        </div>
+                        <div class="option" onclick="selectAnswer(${idx}, 'D')">
+                            <input type="radio" name="q${idx}" id="q${idx}_D">
+                            <label for="q${idx}_D">D. ${q.D}</label>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectAnswer(questionIndex, answer) {
+            let radio = document.getElementById(`q${questionIndex}_${answer}`);
+            radio.checked = true;
+            userAnswers[questionIndex] = answer;
+        }
+
+        function submitExam() {
+            let studentName = document.getElementById('studentName').value.trim();
+            if (!studentName) {
+                alert('Please enter your name');
+                return;
+            }
+
+            let score = 0;
+            let details = [];
+
+            for (let i = 0; i < questions.length; i++) {
+                let userAnswer = userAnswers[i];
+                let correctAnswer = questions[i].correct;
+                let isCorrect = (userAnswer === correctAnswer);
+                
+                if (isCorrect) score++;
+                
+                details.push({
+                    num: i+1,
+                    question: questions[i].text,
+                    userAnswer: userAnswer || 'Not answered',
+                    correctAnswer: correctAnswer,
+                    isCorrect: isCorrect
+                });
+            }
+
+            let percentage = Math.round((score / questions.length) * 100);
+            
+            // Save result to localStorage
+            let allResults = JSON.parse(localStorage.getItem('examResults')) || [];
+            allResults.push({
+                name: studentName,
+                date: new Date().toLocaleString(),
+                score: score,
+                total: questions.length,
+                percentage: percentage,
+                answers: userAnswers
+            });
+            localStorage.setItem('examResults', JSON.stringify(allResults));
+
+            // Show result to student
+            let resultHtml = `
+                <div style="background: white; padding: 25px; border-radius: 10px; text-align: center;">
+                    <h2>Your Result</h2>
+                    <div style="font-size: 48px; font-weight: bold;">${score} / ${questions.length}</div>
+                    <div style="font-size: 24px;">${percentage}%</div>
+                    <div style="margin: 20px 0; text-align: left;">
+                        <h3>Answer Key:</h3>
+                        ${details.map(d => `
+                            <p>${d.num}. ${d.isCorrect ? '✅' : '❌'} Your answer: ${d.userAnswer} | Correct: ${d.correctAnswer}</p>
+                        `).join('')}
+                    </div>
+                    <button onclick="location.reload()">Take Another Exam</button>
+                </div>
+            `;
+            
+            document.getElementById('result').innerHTML = resultHtml;
+            document.getElementById('examContainer').style.display = 'none';
+            document.querySelector('.submit').style.display = 'none';
+        }
+
+        loadExam();
+    </script>
+</body>
+</html>

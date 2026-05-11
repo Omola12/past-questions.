@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grade Answers</title>
+    <style>
+        body { font-family: Arial; max-width: 1200px; margin: auto; padding: 20px; background: #f0f2f5; }
+        .header { background: #1a73e8; color: white; padding: 20px; border-radius: 10px; }
+        .result-card { background: white; padding: 20px; margin: 15px 0; border-radius: 10px; border-left: 5px solid #28a745; }
+        .result-card.fail { border-left-color: #dc3545; }
+        .pass { color: #28a745; font-weight: bold; }
+        .fail { color: #dc3545; font-weight: bold; }
+        button { background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .delete { background: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 Grade Answers - Teacher Panel</h1>
+        <p>View all student submissions and their answers</p>
+        <button onclick="exportResults()">📥 Export to CSV</button>
+        <button class="delete" onclick="clearAll()">🗑️ Delete All Results</button>
+    </div>
+
+    <div id="resultsContainer"></div>
+
+    <script>
+        let allResults = JSON.parse(localStorage.getItem('examResults')) || [];
+        let questions = JSON.parse(localStorage.getItem('examQuestions')) || [];
+
+        function displayResults() {
+            let container = document.getElementById('resultsContainer');
+            
+            if (allResults.length === 0) {
+                container.innerHTML = '<div style="background: white; padding: 40px; text-align: center;">No exam submissions yet. Students need to take the exam.</div>';
+                return;
+            }
+
+            let html = '';
+            allResults.forEach((result, idx) => {
+                let passed = result.percentage >= 70;
+                html += `
+                    <div class="result-card ${passed ? '' : 'fail'}">
+                        <button onclick="deleteResult(${idx})" style="float:right; background:#dc3545; padding:5px 10px;">Delete</button>
+                        <h3>📝 Student: ${result.name}</h3>
+                        <p>📅 Date: ${result.date}</p>
+                        <p>📊 Score: ${result.score}/${result.total} (${result.percentage}%) - ${passed ? '✅ PASSED' : '❌ FAILED'}</p>
+                        
+                        <h4>Answers:</h4>
+                        <table>
+                            <tr><th>Question</th><th>Student's Answer</th><th>Correct Answer</th><th>Status</th></tr>
+                            ${Object.keys(result.answers).map(qNum => {
+                                let qIndex = parseInt(qNum);
+                                let question = questions[qIndex];
+                                if (!question) return '';
+                                let isCorrect = result.answers[qNum] === question.correct;
+                                return `
+                                    <tr>
+                                        <td>Q${parseInt(qNum)+1}: ${question.text.substring(0, 100)}...</td>
+                                        <td>${result.answers[qNum] || 'Not answered'}</td>
+                                        <td>${question.correct}</td>
+                                        <td style="color: ${isCorrect ? '#28a745' : '#dc3545'}">${isCorrect ? '✓ Correct' : '✗ Wrong'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                        <hr>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function deleteResult(index) {
+            if (confirm('Delete this student\'s result?')) {
+                allResults.splice(index, 1);
+                localStorage.setItem('examResults', JSON.stringify(allResults));
+                displayResults();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('⚠️ Delete ALL student results? This cannot be undone!')) {
+                allResults = [];
+                localStorage.setItem('examResults', JSON.stringify(allResults));
+                displayResults();
+            }
+        }
+
+        function exportResults() {
+            let csv = "Student Name,Date,Score,Total,Percentage,Status\n";
+            allResults.forEach(r => {
+                csv += `"${r.name}","${r.date}",${r.score},${r.total},${r.percentage}%,${r.percentage >= 70 ? 'PASSED' : 'FAILED'}\n`;
+            });
+            
+            let blob = new Blob([csv], {type: 'text/csv'});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'exam-results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        displayResults();
+    </script>
+</body>
+</html>
